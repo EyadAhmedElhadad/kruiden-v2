@@ -7,6 +7,7 @@ import { getCartSettings } from "@/lib/site-content";
 import { isPaymobConfigured, createPaymobPayment } from "@/lib/paymob";
 import { isAdminAuthenticated } from "@/lib/auth";
 import { EGYPT_GOVERNORATES } from "@/lib/governorates";
+import { validateDiscountCode } from "@/lib/discount";
 
 const checkoutSchema = z.object({
   customerName: z.string().min(2, "Enter your full name"),
@@ -15,6 +16,7 @@ const checkoutSchema = z.object({
   address: z.string().min(5, "Enter your full address"),
   notes: z.string().optional(),
   paymentMethod: z.enum(["CASH_ON_DELIVERY", "PAYMOB"]),
+  discountCode: z.string().optional(),
   items: z
     .array(z.object({ productId: z.string(), quantity: z.number().int().positive() }))
     .min(1, "Your cart is empty"),
@@ -68,23 +70,47 @@ export async function POST(req: NextRequest) {
     const unitPrice = getEffectivePrice(product as unknown as import("@/lib/types").ProductDTO);
     const subtotal = unitPrice * quantity;
     const shippingFee = await getShippingFee(subtotal);
-    const total = subtotal + shippingFee;
 
-    const order = await prisma.order.create({
-      data: {
-        customerName: data.customerName,
-        phone: data.phone,
-        governorate: data.governorate,
-        address: data.address,
-        notes: data.notes,
-        paymentMethod: data.paymentMethod,
-        subtotal,
-        shippingFee,
-        total,
-        items: {
-          create: [{ productId: product.id, quantity, unitPrice }],
+    // Validate discount code if provided
+    let discountAmount = 0;
+    let discountCodeId: string | null = null;
+    if (data.discountCode) {
+      const validation = await validateDiscountCode(data.discountCode, subtotal);
+      if (!validation.valid) {
+        return NextResponse.json({ error: validation.error }, { status: 400 });
+      }
+      discountAmount = validation.discountAmount;
+      discountCodeId = validation.discountCode.id;
+    }
+
+    const total = Math.max(0, subtotal + shippingFee - discountAmount);
+
+    const order = await prisma.$transaction(async (tx) => {
+      const created = await tx.order.create({
+        data: {
+          customerName: data.customerName,
+          phone: data.phone,
+          governorate: data.governorate,
+          address: data.address,
+          notes: data.notes,
+          paymentMethod: data.paymentMethod,
+          subtotal,
+          shippingFee,
+          discountAmount,
+          discountCodeId,
+          total,
+          items: {
+            create: [{ productId: product.id, quantity, unitPrice }],
+          },
         },
-      },
+      });
+      if (discountCodeId) {
+        await tx.discountCode.update({
+          where: { id: discountCodeId },
+          data: { usedCount: { increment: 1 } },
+        });
+      }
+      return created;
     });
 
     if (data.paymentMethod === "PAYMOB") {
@@ -131,7 +157,7 @@ export async function GET() {
   }
   const orders = await prisma.order.findMany({
     orderBy: { createdAt: "desc" },
-    include: { items: { include: { product: true } } },
+    include: { items: { include: { product: true } }, discountCode: true },
   });
   return NextResponse.json({ orders });
 }

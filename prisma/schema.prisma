@@ -69,23 +69,47 @@ enum PaymentStatus {
   FAILED
 }
 
+enum DiscountType {
+  PERCENTAGE
+  FIXED
+}
+
+model DiscountCode {
+  id             String       @id @default(cuid())
+  code           String       @unique
+  type           DiscountType
+  value          Int // for PERCENTAGE: 1-100, for FIXED: amount in piastres
+  active         Boolean      @default(true)
+  maxUses        Int? // null = unlimited
+  usedCount      Int          @default(0)
+  expiresAt      DateTime?
+  minOrderAmount Int? // minimum subtotal (piastres) to apply
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  orders Order[]
+}
+
 model Order {
-  id             String        @id @default(cuid())
-  customerName   String
-  phone          String
-  governorate    String
-  address        String        @db.Text
-  notes          String?       @db.Text
-  internalNotes  String?       @db.Text
-  paymentMethod  PaymentMethod @default(CASH_ON_DELIVERY)
-  paymentStatus  PaymentStatus @default(PENDING)
-  paymobOrderId  String?
-  status         OrderStatus   @default(PENDING)
-  subtotal       Int
-  shippingFee    Int           @default(0)
-  total          Int
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
+  id              String        @id @default(cuid())
+  customerName    String
+  phone           String
+  governorate     String
+  address         String        @db.Text
+  notes           String?       @db.Text
+  internalNotes   String?       @db.Text
+  paymentMethod   PaymentMethod @default(CASH_ON_DELIVERY)
+  paymentStatus   PaymentStatus @default(PENDING)
+  paymobOrderId   String?
+  status          OrderStatus   @default(PENDING)
+  subtotal        Int
+  shippingFee     Int           @default(0)
+  discountAmount  Int           @default(0)
+  total           Int
+  discountCodeId  String?
+  discountCode    DiscountCode? @relation(fields: [discountCodeId], references: [id])
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
 
   items OrderItem[]
 }

@@ -23,6 +23,12 @@ export default function CheckoutForm({ paymobEnabled, codEnabled = true }: { pay
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Discount code state
+  const [discountInput, setDiscountInput] = useState("");
+  const [appliedDiscount, setAppliedDiscount] = useState<{ code: string; amount: number; type: string; value: number } | null>(null);
+  const [discountError, setDiscountError] = useState<string | null>(null);
+  const [discountLoading, setDiscountLoading] = useState(false);
+
   useEffect(() => {
     if (!codEnabled && paymobEnabled && form.paymentMethod === "CASH_ON_DELIVERY") {
       setForm((f) => ({ ...f, paymentMethod: "PAYMOB" }));
@@ -34,6 +40,41 @@ export default function CheckoutForm({ paymobEnabled, codEnabled = true }: { pay
 
   function update<K extends keyof typeof form>(key: K, value: (typeof form)[K]) {
     setForm((f) => ({ ...f, [key]: value }));
+  }
+
+  async function applyDiscount() {
+    setDiscountError(null);
+    const code = discountInput.trim().toUpperCase();
+    if (!code) {
+      setDiscountError("Enter a code");
+      return;
+    }
+    setDiscountLoading(true);
+    try {
+      const res = await fetch("/api/discount-codes/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code, subtotal }),
+      });
+      const data = await res.json();
+      if (!data.valid) {
+        setDiscountError(data.error ?? "Invalid code");
+        setAppliedDiscount(null);
+      } else {
+        setAppliedDiscount({ code: data.code, amount: data.discountAmount, type: data.type, value: data.value });
+        setDiscountError(null);
+      }
+    } catch {
+      setDiscountError("Could not validate code");
+    } finally {
+      setDiscountLoading(false);
+    }
+  }
+
+  function removeDiscount() {
+    setAppliedDiscount(null);
+    setDiscountInput("");
+    setDiscountError(null);
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -52,6 +93,7 @@ export default function CheckoutForm({ paymobEnabled, codEnabled = true }: { pay
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...form,
+          discountCode: appliedDiscount?.code ?? undefined,
           items: lines.map((l) => ({ productId: l.productId, quantity: l.quantity })),
         }),
       });
@@ -63,8 +105,6 @@ export default function CheckoutForm({ paymobEnabled, codEnabled = true }: { pay
       }
       clear();
       if (data.redirectUrl.startsWith("http")) {
-        // Paymob's hosted iframe lives off-site; the app router can't
-        // navigate to external URLs, so use a hard redirect.
         window.location.href = data.redirectUrl;
       } else {
         router.push(data.redirectUrl);
@@ -85,6 +125,8 @@ export default function CheckoutForm({ paymobEnabled, codEnabled = true }: { pay
       </div>
     );
   }
+
+  const displayTotal = Math.max(0, subtotal - (appliedDiscount?.amount ?? 0));
 
   return (
     <div className="grid gap-10 md:grid-cols-5">
@@ -149,6 +191,34 @@ export default function CheckoutForm({ paymobEnabled, codEnabled = true }: { pay
           />
         </Field>
 
+        <div className="rounded-sm border border-ink/10 bg-white p-4">
+          <label className="mb-2 block text-[13px] font-medium text-ink/70">Discount Code</label>
+          {!appliedDiscount ? (
+            <div className="flex gap-2">
+              <input
+                value={discountInput}
+                onChange={(e) => setDiscountInput(e.target.value.toUpperCase())}
+                className="input flex-1 uppercase"
+                placeholder="e.g. WELCOME10"
+              />
+              <button type="button" onClick={applyDiscount} disabled={discountLoading} className="btn-primary whitespace-nowrap px-4 text-sm">
+                {discountLoading ? "…" : "Apply"}
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-center justify-between rounded-sm border border-olive-600 bg-olive-50 px-3 py-2">
+              <span className="text-sm font-medium text-olive-700">
+                {appliedDiscount.code} — {appliedDiscount.type === "PERCENTAGE" ? `${appliedDiscount.value}% off` : `${formatPrice(appliedDiscount.value)} off`} ({formatPrice(appliedDiscount.amount)} saved)
+              </span>
+              <button type="button" onClick={removeDiscount} className="text-xs text-ink/60 underline hover:text-ink">
+                Remove
+              </button>
+            </div>
+          )}
+          {discountError && <p className="mt-2 text-xs text-red-600">{discountError}</p>}
+          {!discountError && !appliedDiscount && <p className="mt-1 text-xs text-ink/50">Enter a code from admin (e.g. WELCOME10).</p>}
+        </div>
+
         <fieldset>
           <legend className="mb-2 text-[13px] font-medium text-ink/70">Payment Method</legend>
           <div className="space-y-2">
@@ -205,9 +275,22 @@ export default function CheckoutForm({ paymobEnabled, codEnabled = true }: { pay
             </li>
           ))}
         </ul>
-        <div className="mt-5 flex items-center justify-between border-t border-ink/10 pt-4">
-          <span className="font-medium">Total</span>
-          <span className="font-serif text-xl font-semibold">{formatPrice(subtotal)}</span>
+        <div className="mt-5 space-y-2 border-t border-ink/10 pt-4 text-sm">
+          <div className="flex justify-between">
+            <span className="text-ink/60">Subtotal</span>
+            <span>{formatPrice(subtotal)}</span>
+          </div>
+          {appliedDiscount && (
+            <div className="flex justify-between text-olive-700">
+              <span>Discount ({appliedDiscount.code})</span>
+              <span>-{formatPrice(appliedDiscount.amount)}</span>
+            </div>
+          )}
+          <div className="flex items-center justify-between border-t border-ink/10 pt-3 font-medium">
+            <span>Total</span>
+            <span className="font-serif text-xl font-semibold">{formatPrice(displayTotal)}</span>
+          </div>
+          <p className="text-xs text-ink/50">Shipping calculated at checkout.</p>
         </div>
       </div>
 

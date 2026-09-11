@@ -75,6 +75,18 @@ async function main() {
     });
     console.log("Seeded features");
   }
+
+  // Sample discount codes
+  const discountCount = await prisma.discountCode.count();
+  if (discountCount === 0) {
+    await prisma.discountCode.createMany({
+      data: [
+        { code: "WELCOME10", type: "PERCENTAGE", value: 10, active: true },
+        { code: "SAVE50", type: "FIXED", value: 5000, active: true, minOrderAmount: 50000 },
+      ],
+    });
+    console.log("Seeded discount codes");
+  }
   console.log("Seeded site content");
 }
 
