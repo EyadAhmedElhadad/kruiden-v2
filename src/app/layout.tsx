@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import SiteChrome from "@/components/layout/SiteChrome";
+import { LanguageProvider } from "@/components/LanguageProvider";
 
 // Fonts are loaded via <link> tags below (CDN) to allow offline `next build`
 // without requiring Google Fonts fetch at compile time. The CSS variables are
@@ -54,7 +55,9 @@ export default function RootLayout({
         `}</style>
       </head>
       <body>
-        <SiteChrome>{children}</SiteChrome>
+        <LanguageProvider>
+          <SiteChrome>{children}</SiteChrome>
+        </LanguageProvider>
       </body>
     </html>
   );

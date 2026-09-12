@@ -3,17 +3,19 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useCart } from "@/lib/cart-context";
-
-const NAV_LINKS = [
-  { label: "About", href: "/#ritual" },
-  { label: "The Oil", href: "/product" },
-  { label: "Benefits", href: "/#benefits" },
-  { label: "FAQ", href: "/#faq" },
-];
+import { useLanguage } from "@/components/LanguageProvider";
 
 export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
   const { count, openCart } = useCart();
+  const { lang, toggle, t, isAr } = useLanguage();
+
+  const NAV_LINKS = [
+    { label: t("header.about"), href: "/#ritual" },
+    { label: t("header.theOil"), href: "/product" },
+    { label: t("header.benefits"), href: "/#benefits" },
+    { label: t("header.faq"), href: "/#faq" },
+  ];
 
   return (
     <header className="sticky top-0 z-40 border-b border-ink/8 bg-cream/90 backdrop-blur">
@@ -37,12 +39,24 @@ export default function Header() {
           ))}
         </nav>
 
-        <div className="flex items-center gap-3 md:gap-5">
+        <div className="flex items-center gap-2 md:gap-3">
+          <button
+            onClick={toggle}
+            aria-label={isAr ? "Switch to English" : "التبديل إلى العربية"}
+            className="hidden items-center gap-1.5 rounded-full border border-ink/10 bg-white px-3.5 py-2 text-xs font-semibold uppercase tracking-widest text-ink/70 transition-colors hover:border-ink/20 hover:text-ink md:inline-flex"
+            style={isAr ? { fontFamily: '"Cairo", system-ui, sans-serif' } : undefined}
+          >
+            <span className="material-symbols-outlined text-[16px]" aria-hidden>
+              language
+            </span>
+            {isAr ? "English" : "العربية"}
+          </button>
           <Link
             href="/product"
             className="btn-primary hidden md:inline-flex"
+            style={isAr ? { fontFamily: '"Cairo", system-ui, sans-serif' } : undefined}
           >
-            Shop Now
+            {t("header.shopNow")}
           </Link>
           <button
             onClick={openCart}
@@ -79,12 +93,26 @@ export default function Header() {
                 {link.label}
               </Link>
             ))}
+            <button
+              onClick={() => {
+                toggle();
+                setMenuOpen(false);
+              }}
+              className="mt-4 flex w-full items-center justify-center gap-2 rounded-full border border-ink/10 bg-white px-4 py-3 text-xs font-semibold uppercase tracking-widest text-ink/70"
+              style={isAr ? { fontFamily: '"Cairo", system-ui, sans-serif' } : undefined}
+            >
+              <span className="material-symbols-outlined text-[16px]" aria-hidden>
+                language
+              </span>
+              {isAr ? "English" : "العربية"}
+            </button>
             <Link
               href="/product"
               onClick={() => setMenuOpen(false)}
               className="btn-primary mt-4 w-full"
+              style={isAr ? { fontFamily: '"Cairo", system-ui, sans-serif' } : undefined}
             >
-              Shop Now
+              {t("header.shopNow")}
             </Link>
           </nav>
         </div>

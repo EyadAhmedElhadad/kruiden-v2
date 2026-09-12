@@ -1,17 +1,40 @@
-import { getFeatures } from "@/lib/site-content";
+"use client";
 
-export default async function FeatureStrip() {
-  const FEATURES = await getFeatures();
+import { useEffect, useState } from "react";
+import { useLanguage } from "@/components/LanguageProvider";
+import { FALLBACK_FEATURES } from "@/lib/site-content";
+
+type Feature = { label: string; icon: string };
+
+export default function FeatureStrip() {
+  const { t, tr, isAr } = useLanguage();
+  const [features, setFeatures] = useState<Feature[]>(FALLBACK_FEATURES as Feature[]);
+
+  useEffect(() => {
+    fetch("/api/features")
+      .then((r) => r.json())
+      .then((d) => {
+        if (d?.features?.length) setFeatures(d.features);
+      })
+      .catch(() => {});
+  }, []);
   return (
-    <section className="border-y border-apos-outlineVariant bg-apos-surface">
+    <section
+      dir={isAr ? "rtl" : "ltr"}
+      style={isAr ? { fontFamily: '"Cairo", system-ui, sans-serif' } : undefined}
+      className="border-y border-apos-outlineVariant bg-apos-surface"
+    >
       <div className="container-editorial grid grid-cols-2 gap-y-8 py-10 md:grid-cols-4 md:gap-y-0 md:py-12">
-        {FEATURES.map((f) => (
+        {features.map((f) => (
           <div key={f.label} className="flex items-center gap-3 md:justify-center">
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-apos-secondaryContainer text-apos-primary">
               <Icon name={f.icon} />
             </span>
-            <span className="text-[13px] font-medium leading-tight text-apos-onSurfaceVariant">
-              {f.label}
+            <span
+              className="text-[13px] font-medium leading-tight text-apos-onSurfaceVariant"
+              style={isAr ? { fontFamily: '"Cairo", system-ui, sans-serif' } : undefined}
+            >
+              {tr(f.label)}
             </span>
           </div>
         ))}

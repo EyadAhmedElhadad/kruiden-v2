@@ -2,8 +2,8 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import TrustIcon from "./TrustIcon";
+import { useLanguage } from "@/components/LanguageProvider";
 
 type HeroData = {
   eyebrow: string;
@@ -24,67 +24,21 @@ type Props = {
   productName: string;
 };
 
-const translations: Record<string, Record<string, string>> = {
-  en: {},
-  ar: {
-    "Botanical Hair Ritual": "طقوس العناية النباتية بالشعر",
-    "Naturally better": "أيام أفضل لشعرك،",
-    "hair days.": "بطبيعتها.",
-    "A cold-pressed hair oil made from a short, transparent list of botanicals — crafted to nourish the scalp and strengthen every strand.":
-      "زيت شعر معصور على البارد من مكونات نباتية نقية ومختارة بعناية — صُمم ليغذي فروة الرأس ويقوي كل خصلة شعر.",
-    "Purchase the Oil": "اشتري الزيت",
-    "Shop the Oil": "اشتري الزيت",
-    "PURCHASE THE OIL": "اشتري الزيت",
-    "Discover the Ritual": "اكتشف الطقوس",
-    "100% Botanical": "نباتي 100%",
-    "No Fillers": "خالٍ من المواد المالئة",
-    "Cruelty-Free": "لم يُجرب على الحيوانات",
-  },
-};
-
-function t(en: string, lang: "en" | "ar"): string {
-  if (lang === "en") return en;
-  return translations.ar[en] ?? translations.ar[en.trim()] ?? en;
-}
-
 export default function HeroClient({ hero, heroImage, productName }: Props) {
-  const [lang, setLang] = useState<"en" | "ar">("en");
+  const { lang, isAr, t, tr } = useLanguage();
 
-  useEffect(() => {
-    const saved = localStorage.getItem("kruiden_lang") as "en" | "ar" | null;
-    if (saved === "ar" || saved === "en") setLang(saved);
-    else {
-      const browser = navigator.language?.toLowerCase().startsWith("ar") ? "ar" : "en";
-      setLang(browser);
-    }
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem("kruiden_lang", lang);
-  }, [lang]);
-
-  const isAr = lang === "ar";
-
-  // Translate hero fields
-  const eyebrow = t(hero.eyebrow, lang);
-  // Special handling for headline combined
-  let headline1 = t(hero.headline1, lang);
-  let headline2 = t(hero.headline2, lang);
-  // Fallback if DB still has old combined logic: when en hero is "Purchase the Oil" etc we already map
-  // For headline, ensure ar splits correctly
-  if (isAr) {
-    // If original en was the fallback, we have mapped above to ar parts
-    // Ensure headline1/headline2 are not empty after translation
-    if (hero.headline1 === "Naturally better" && hero.headline2 === "hair days.") {
-      headline1 = "أيام أفضل لشعرك،";
-      headline2 = "بطبيعتها.";
-    }
+  // Translate hero fields using global dictionary (fallback to tr for DB values)
+  const eyebrow = lang === "ar" ? tr(hero.eyebrow) || t("hero.eyebrow") : hero.eyebrow;
+  let headline1 = lang === "ar" ? tr(hero.headline1) || t("hero.headline1") : hero.headline1;
+  let headline2 = lang === "ar" ? tr(hero.headline2) || t("hero.headline2") : hero.headline2;
+  if (isAr && hero.headline1 === "Naturally better" && hero.headline2 === "hair days.") {
+    headline1 = t("hero.headline1");
+    headline2 = t("hero.headline2");
   }
-
-  const description = t(hero.description, lang);
-  const primaryLabel = t(hero.primaryCtaLabel, lang);
-  const secondaryLabel = t(hero.secondaryCtaLabel, lang);
-  const badges = hero.trustBadges.map((b) => ({ ...b, label: t(b.label, lang) }));
+  const description = lang === "ar" ? tr(hero.description) || t("hero.description") : hero.description;
+  const primaryLabel = lang === "ar" ? tr(hero.primaryCtaLabel) || t("hero.primaryCta") : hero.primaryCtaLabel;
+  const secondaryLabel = lang === "ar" ? tr(hero.secondaryCtaLabel) || t("hero.secondaryCta") : hero.secondaryCtaLabel;
+  const badges = hero.trustBadges.map((b) => ({ ...b, label: lang === "ar" ? tr(b.label) : b.label }));
 
   return (
     <section
@@ -92,20 +46,6 @@ export default function HeroClient({ hero, heroImage, productName }: Props) {
       style={isAr ? { fontFamily: '"Cairo", "IBM Plex Sans Arabic", "Noto Sans Arabic", system-ui, sans-serif' } : undefined}
       className="relative overflow-hidden bg-apos-surface"
     >
-      {/* Language switcher - top corner */}
-      <div className="absolute right-4 top-4 z-20 sm:right-6 sm:top-6">
-        <button
-          onClick={() => setLang(isAr ? "en" : "ar")}
-          aria-label={isAr ? "Switch to English" : "التبديل إلى العربية"}
-          className="inline-flex items-center gap-2 rounded-full border border-apos-primary/30 bg-white/80 px-4 py-2 text-xs font-semibold tracking-widest backdrop-blur transition-colors hover:bg-apos-primary hover:text-white"
-          style={isAr ? { fontFamily: '"Cairo", system-ui, sans-serif' } : undefined}
-        >
-          <span className="material-symbols-outlined text-[16px]" aria-hidden>
-            language
-          </span>
-          {isAr ? "English" : "العربية"}
-        </button>
-      </div>
 
       <div className="container-editorial grid items-center gap-12 py-16 md:grid-cols-2 md:gap-16 md:py-24">
         <div className="order-2 md:order-1">

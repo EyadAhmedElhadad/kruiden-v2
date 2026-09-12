@@ -7,10 +7,12 @@ import { useEffect, useState } from "react";
 import { useCart } from "@/lib/cart-context";
 import { formatPrice } from "@/lib/utils";
 import { EGYPT_GOVERNORATES } from "@/lib/governorates";
+import { useLanguage } from "@/components/LanguageProvider";
 
 export default function CheckoutForm({ paymobEnabled, codEnabled = true }: { paymobEnabled: boolean; codEnabled?: boolean }) {
   const { lines, subtotal, clear } = useCart();
   const router = useRouter();
+  const { t, isAr } = useLanguage();
 
   const [form, setForm] = useState({
     customerName: "",
@@ -46,7 +48,7 @@ export default function CheckoutForm({ paymobEnabled, codEnabled = true }: { pay
     setDiscountError(null);
     const code = discountInput.trim().toUpperCase();
     if (!code) {
-      setDiscountError("Enter a code");
+      setDiscountError(isAr ? "أدخل الكود" : "Enter a code");
       return;
     }
     setDiscountLoading(true);
@@ -58,14 +60,14 @@ export default function CheckoutForm({ paymobEnabled, codEnabled = true }: { pay
       });
       const data = await res.json();
       if (!data.valid) {
-        setDiscountError(data.error ?? "Invalid code");
+        setDiscountError(data.error ?? (isAr ? "كود غير صالح" : "Invalid code"));
         setAppliedDiscount(null);
       } else {
         setAppliedDiscount({ code: data.code, amount: data.discountAmount, type: data.type, value: data.value });
         setDiscountError(null);
       }
     } catch {
-      setDiscountError("Could not validate code");
+      setDiscountError(isAr ? "تعذر التحقق من الكود" : "Could not validate code");
     } finally {
       setDiscountLoading(false);
     }
@@ -82,7 +84,7 @@ export default function CheckoutForm({ paymobEnabled, codEnabled = true }: { pay
     setError(null);
 
     if (lines.length === 0) {
-      setError("Your cart is empty.");
+      setError(isAr ? "سلتك فارغة." : "Your cart is empty.");
       return;
     }
 
@@ -99,7 +101,7 @@ export default function CheckoutForm({ paymobEnabled, codEnabled = true }: { pay
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error ?? "Something went wrong. Please try again.");
+        setError(data.error ?? (isAr ? "حدث خطأ، حاول مرة أخرى." : "Something went wrong. Please try again."));
         setSubmitting(false);
         return;
       }
@@ -110,17 +112,17 @@ export default function CheckoutForm({ paymobEnabled, codEnabled = true }: { pay
         router.push(data.redirectUrl);
       }
     } catch {
-      setError("Something went wrong. Please try again.");
+      setError(isAr ? "حدث خطأ، حاول مرة أخرى." : "Something went wrong. Please try again.");
       setSubmitting(false);
     }
   }
 
   if (lines.length === 0) {
     return (
-      <div className="rounded-sm border border-ink/10 bg-sand/50 p-8 text-center">
-        <p className="text-sm text-ink/60">Your cart is empty.</p>
-        <Link href="/product" className="btn-primary mt-5 inline-flex">
-          Shop the Oil
+      <div dir={isAr ? "rtl" : "ltr"} style={isAr ? { fontFamily: '"Cairo", system-ui, sans-serif' } : undefined} className="rounded-sm border border-ink/10 bg-sand/50 p-8 text-center">
+        <p className="text-sm text-ink/60">{t("checkout.empty")}</p>
+        <Link href="/product" className="btn-primary mt-5 inline-flex" style={isAr ? { fontFamily: '"Cairo", system-ui, sans-serif' } : undefined}>
+          {t("cart.shopOil")}
         </Link>
       </div>
     );
@@ -129,19 +131,19 @@ export default function CheckoutForm({ paymobEnabled, codEnabled = true }: { pay
   const displayTotal = Math.max(0, subtotal - (appliedDiscount?.amount ?? 0));
 
   return (
-    <div className="grid gap-10 md:grid-cols-5">
+    <div dir={isAr ? "rtl" : "ltr"} style={isAr ? { fontFamily: '"Cairo", system-ui, sans-serif' } : undefined} className="grid gap-10 md:grid-cols-5">
       <form onSubmit={handleSubmit} className="space-y-5 md:col-span-3">
-        <Field label="Full Name">
+        <Field label={t("checkout.fullName")}>
           <input
             required
             value={form.customerName}
             onChange={(e) => update("customerName", e.target.value)}
             className="input"
-            placeholder="Yasmin Ahmed"
+            placeholder={isAr ? "أحمد محمد" : "Yasmin Ahmed"}
           />
         </Field>
 
-        <Field label="Phone Number">
+        <Field label={t("checkout.phone")}>
           <input
             required
             type="tel"
@@ -152,7 +154,7 @@ export default function CheckoutForm({ paymobEnabled, codEnabled = true }: { pay
           />
         </Field>
 
-        <Field label="Governorate">
+        <Field label={t("checkout.governorate")}>
           <select
             required
             value={form.governorate}
@@ -160,7 +162,7 @@ export default function CheckoutForm({ paymobEnabled, codEnabled = true }: { pay
             className="input"
           >
             <option value="" disabled>
-              Select governorate
+              {isAr ? "اختر المحافظة" : "Select governorate"}
             </option>
             {EGYPT_GOVERNORATES.map((g) => (
               <option key={g} value={g}>
@@ -170,63 +172,63 @@ export default function CheckoutForm({ paymobEnabled, codEnabled = true }: { pay
           </select>
         </Field>
 
-        <Field label="Detailed Address">
+        <Field label={t("checkout.address")}>
           <textarea
             required
             rows={3}
             value={form.address}
             onChange={(e) => update("address", e.target.value)}
             className="input resize-none"
-            placeholder="Street, building, apartment, landmarks"
+            placeholder={isAr ? "الشارع، المبنى، الشقة، علامة مميزة" : "Street, building, apartment, landmarks"}
           />
         </Field>
 
-        <Field label="Notes (optional)">
+        <Field label={t("checkout.notes")}>
           <textarea
             rows={2}
             value={form.notes}
             onChange={(e) => update("notes", e.target.value)}
             className="input resize-none"
-            placeholder="Delivery instructions, preferred time, etc."
+            placeholder={isAr ? "تعليمات التوصيل، الوقت المفضل، إلخ." : "Delivery instructions, preferred time, etc."}
           />
         </Field>
 
         <div className="rounded-sm border border-ink/10 bg-white p-4">
-          <label className="mb-2 block text-[13px] font-medium text-ink/70">Discount Code</label>
+          <label className="mb-2 block text-[13px] font-medium text-ink/70">{t("checkout.discount")}</label>
           {!appliedDiscount ? (
             <div className="flex gap-2">
               <input
                 value={discountInput}
                 onChange={(e) => setDiscountInput(e.target.value.toUpperCase())}
                 className="input flex-1 uppercase"
-                placeholder="e.g. WELCOME10"
+                placeholder={t("checkout.discountPlaceholder")}
               />
-              <button type="button" onClick={applyDiscount} disabled={discountLoading} className="btn-primary whitespace-nowrap px-4 text-sm">
-                {discountLoading ? "…" : "Apply"}
+              <button type="button" onClick={applyDiscount} disabled={discountLoading} className="btn-primary whitespace-nowrap px-4 text-sm" style={isAr ? { fontFamily: '"Cairo", system-ui, sans-serif' } : undefined}>
+                {discountLoading ? "…" : t("checkout.apply")}
               </button>
             </div>
           ) : (
             <div className="flex items-center justify-between rounded-sm border border-olive-600 bg-olive-50 px-3 py-2">
               <span className="text-sm font-medium text-olive-700">
-                {appliedDiscount.code} — {appliedDiscount.type === "PERCENTAGE" ? `${appliedDiscount.value}% off` : `${formatPrice(appliedDiscount.value)} off`} ({formatPrice(appliedDiscount.amount)} saved)
+                {appliedDiscount.code} — {appliedDiscount.type === "PERCENTAGE" ? `${appliedDiscount.value}% off` : `${formatPrice(appliedDiscount.value)} off`} ({formatPrice(appliedDiscount.amount)} {t("checkout.discountSaved")})
               </span>
-              <button type="button" onClick={removeDiscount} className="text-xs text-ink/60 underline hover:text-ink">
-                Remove
+              <button type="button" onClick={removeDiscount} className="text-xs text-ink/60 underline hover:text-ink" style={isAr ? { fontFamily: '"Cairo", system-ui, sans-serif' } : undefined}>
+                {t("checkout.remove")}
               </button>
             </div>
           )}
           {discountError && <p className="mt-2 text-xs text-red-600">{discountError}</p>}
-          {!discountError && !appliedDiscount && <p className="mt-1 text-xs text-ink/50">Enter a code from admin (e.g. WELCOME10).</p>}
+          {!discountError && !appliedDiscount && <p className="mt-1 text-xs text-ink/50">{isAr ? "أدخل كودًا من الإدارة (مثال: WELCOME10)." : "Enter a code from admin (e.g. WELCOME10)."}</p>}
         </div>
 
         <fieldset>
-          <legend className="mb-2 text-[13px] font-medium text-ink/70">Payment Method</legend>
+          <legend className="mb-2 text-[13px] font-medium text-ink/70">{t("checkout.paymentMethod")}</legend>
           <div className="space-y-2">
             {codEnabled && (
               <PaymentOption
                 id="cod"
-                label="Cash on Delivery"
-                description="Pay in cash when your order arrives."
+                label={t("checkout.cod")}
+                description={t("checkout.codDesc")}
                 checked={form.paymentMethod === "CASH_ON_DELIVERY"}
                 onSelect={() => update("paymentMethod", "CASH_ON_DELIVERY")}
               />
@@ -234,14 +236,14 @@ export default function CheckoutForm({ paymobEnabled, codEnabled = true }: { pay
             {paymobEnabled && (
               <PaymentOption
                 id="paymob"
-                label="Pay Online"
-                description="Secure card payment via Paymob."
+                label={t("checkout.payOnline")}
+                description={t("checkout.payOnlineDesc")}
                 checked={form.paymentMethod === "PAYMOB"}
                 onSelect={() => update("paymentMethod", "PAYMOB")}
               />
             )}
             {!codEnabled && !paymobEnabled && (
-              <p className="text-sm text-red-700">No payment methods are currently available. Please contact support.</p>
+              <p className="text-sm text-red-700">{t("checkout.noPayment")}</p>
             )}
           </div>
         </fieldset>
@@ -252,13 +254,15 @@ export default function CheckoutForm({ paymobEnabled, codEnabled = true }: { pay
           </p>
         )}
 
-        <button type="submit" disabled={submitting} className="btn-primary w-full">
-          {submitting ? "Placing Order…" : "Place Order"}
+        <button type="submit" disabled={submitting} className="btn-primary w-full" style={isAr ? { fontFamily: '"Cairo", system-ui, sans-serif' } : undefined}>
+          {submitting ? t("checkout.placing") : t("checkout.placeOrder")}
         </button>
       </form>
 
       <div className="h-fit rounded-sm border border-ink/10 bg-sand/50 p-6 md:col-span-2">
-        <h2 className="font-serif text-lg font-semibold">Order Summary</h2>
+        <h2 className="font-serif text-lg font-semibold" style={isAr ? { fontFamily: '"Cairo", serif' } : undefined}>
+          {t("checkout.orderSummary")}
+        </h2>
         <ul className="mt-4 space-y-4">
           {lines.map((line) => (
             <li key={line.productId} className="flex gap-3">
@@ -267,7 +271,9 @@ export default function CheckoutForm({ paymobEnabled, codEnabled = true }: { pay
               </div>
               <div className="flex-1">
                 <p className="text-sm font-medium">{line.name}</p>
-                <p className="text-xs text-ink/50">Qty {line.quantity}</p>
+                <p className="text-xs text-ink/50">
+                  {isAr ? `${t("cart.qty")} ${line.quantity}` : `Qty ${line.quantity}`}
+                </p>
               </div>
               <p className="text-sm font-medium">
                 {formatPrice(line.price * line.quantity, line.currency)}
@@ -277,20 +283,22 @@ export default function CheckoutForm({ paymobEnabled, codEnabled = true }: { pay
         </ul>
         <div className="mt-5 space-y-2 border-t border-ink/10 pt-4 text-sm">
           <div className="flex justify-between">
-            <span className="text-ink/60">Subtotal</span>
+            <span className="text-ink/60">{t("checkout.subtotal")}</span>
             <span>{formatPrice(subtotal)}</span>
           </div>
           {appliedDiscount && (
             <div className="flex justify-between text-olive-700">
-              <span>Discount ({appliedDiscount.code})</span>
+              <span>
+                {t("checkout.discount")} ({appliedDiscount.code})
+              </span>
               <span>-{formatPrice(appliedDiscount.amount)}</span>
             </div>
           )}
           <div className="flex items-center justify-between border-t border-ink/10 pt-3 font-medium">
-            <span>Total</span>
+            <span>{t("checkout.total")}</span>
             <span className="font-serif text-xl font-semibold">{formatPrice(displayTotal)}</span>
           </div>
-          <p className="text-xs text-ink/50">Shipping calculated at checkout.</p>
+          <p className="text-xs text-ink/50">{t("checkout.shippingNote")}</p>
         </div>
       </div>
 

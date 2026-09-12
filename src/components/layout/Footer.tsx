@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useLanguage } from "@/components/LanguageProvider";
 
 const FALLBACK = {
   siteName: "Kruiden",
@@ -18,6 +19,7 @@ const FALLBACK = {
 
 export default function Footer() {
   const [data, setData] = useState(FALLBACK);
+  const { t, isAr } = useLanguage();
 
   useEffect(() => {
     Promise.all([
@@ -42,10 +44,12 @@ export default function Footer() {
   }, []);
 
   return (
-    <footer className="bg-ink text-cream/80">
+    <footer dir={isAr ? "rtl" : "ltr"} style={isAr ? { fontFamily: '"Cairo", system-ui, sans-serif' } : undefined} className="bg-ink text-cream/80">
       <div className="container-editorial grid gap-10 py-16 md:grid-cols-4 md:gap-8 md:py-20">
         <div className="md:col-span-2">
-          <span className="font-serif text-2xl font-semibold text-cream">{data.siteName}</span>
+          <span className="font-serif text-2xl font-semibold text-cream" style={isAr ? { fontFamily: '"Cairo", serif' } : undefined}>
+            {data.siteName}
+          </span>
           <p className="mt-4 max-w-xs text-sm leading-relaxed text-cream/60">
             {data.description}
           </p>
@@ -68,17 +72,17 @@ export default function Footer() {
         </div>
 
         <div>
-          <p className="eyebrow text-cream/40">Shop</p>
+          <p className="eyebrow text-cream/40">{t("footer.shop")}</p>
           <ul className="mt-4 space-y-3 text-sm">
-            <li><Link href="/product" className="text-cream/70 hover:text-cream">The Oil</Link></li>
-            <li><Link href="/#ritual" className="text-cream/70 hover:text-cream">About</Link></li>
-            <li><Link href="/#faq" className="text-cream/70 hover:text-cream">FAQ</Link></li>
-            <li><Link href="/cart" className="text-cream/70 hover:text-cream">Cart</Link></li>
+            <li><Link href="/product" className="text-cream/70 hover:text-cream">{t("footer.theOil")}</Link></li>
+            <li><Link href="/#ritual" className="text-cream/70 hover:text-cream">{t("footer.about")}</Link></li>
+            <li><Link href="/#faq" className="text-cream/70 hover:text-cream">{t("footer.faq")}</Link></li>
+            <li><Link href="/cart" className="text-cream/70 hover:text-cream">{t("footer.cart")}</Link></li>
           </ul>
         </div>
 
         <div>
-          <p className="eyebrow text-cream/40">Contact</p>
+          <p className="eyebrow text-cream/40">{t("footer.contact")}</p>
           <ul className="mt-4 space-y-3 text-sm text-cream/70">
             <li>{data.email}</li>
             <li>{data.phone}</li>

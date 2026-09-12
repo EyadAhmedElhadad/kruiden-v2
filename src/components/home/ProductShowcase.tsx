@@ -1,29 +1,38 @@
+"use client";
+
 import Image from "next/image";
 import type { ProductDTO } from "@/lib/types";
 import { formatPrice } from "@/lib/utils";
 import { getEffectivePrice, isDiscountActive } from "@/lib/product";
+import { useLanguage } from "@/components/LanguageProvider";
 
 export default function ProductShowcase({ product }: { product: ProductDTO }) {
+  const { t, isAr } = useLanguage();
   const images = product.images.slice(0, 3);
-  const captions = [
-    "Cold-pressed botanicals",
-    "Nothing synthetic, ever",
-    "Lightweight, fast-absorbing",
-  ];
+  const captions = [t("showcase.caption1"), t("showcase.caption2"), t("showcase.caption3")];
   const discount = isDiscountActive(product);
   const effective = getEffectivePrice(product);
 
   return (
-    <section className="bg-apos-surface py-20 md:py-28">
+    <section
+      dir={isAr ? "rtl" : "ltr"}
+      style={isAr ? { fontFamily: '"Cairo", system-ui, sans-serif' } : undefined}
+      className="bg-apos-surface py-20 md:py-28"
+    >
       <div className="container-editorial">
         <div className="mb-12 max-w-xl md:mb-16">
-          <p className="apo-eyebrow">In Every Bottle</p>
-          <h2 className="mt-5 font-noto text-4xl font-semibold leading-tight text-apos-onSurface md:text-[42px]">
-            Crafted to be seen, felt, and trusted.
+          <p className="apo-eyebrow">{t("showcase.eyebrow")}</p>
+          <h2
+            className="mt-5 font-noto text-4xl font-semibold leading-tight text-apos-onSurface md:text-[42px]"
+            style={isAr ? { fontFamily: '"Cairo", serif' } : undefined}
+          >
+            {t("showcase.headline")}
           </h2>
-          <p className="mt-5 text-[15px] leading-relaxed text-apos-onSurfaceVariant">
-            From the first drop to the last, every detail is considered — so the
-            ritual feels as good as the results.
+          <p
+            className="mt-5 text-[15px] leading-relaxed text-apos-onSurfaceVariant"
+            style={isAr ? { fontFamily: '"Cairo", system-ui, sans-serif' } : undefined}
+          >
+            {t("showcase.description")}
           </p>
           {discount && (
             <div className="mt-6 flex flex-wrap items-center gap-3">
@@ -57,7 +66,10 @@ export default function ProductShowcase({ product }: { product: ProductDTO }) {
                   className="object-cover transition-transform duration-500 ease-editorial group-hover:scale-[1.03]"
                 />
               </div>
-              <figcaption className="mt-4 text-[14px] font-medium text-apos-onSurfaceVariant">
+              <figcaption
+                className="mt-4 text-[14px] font-medium text-apos-onSurfaceVariant"
+                style={isAr ? { fontFamily: '"Cairo", system-ui, sans-serif' } : undefined}
+              >
                 {captions[i]}
               </figcaption>
             </figure>

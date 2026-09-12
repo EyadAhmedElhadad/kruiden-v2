@@ -7,10 +7,12 @@ import TrustIcon from "./TrustIcon";
 import type { ProductDTO } from "@/lib/types";
 import { formatPrice } from "@/lib/utils";
 import { getEffectivePrice, isDiscountActive } from "@/lib/product";
+import { useLanguage } from "@/components/LanguageProvider";
 
 export default function ProductPurchase({ product }: { product: ProductDTO }) {
   const { addItem } = useCart();
   const router = useRouter();
+  const { t, isAr } = useLanguage();
   const effectivePrice = getEffectivePrice(product);
   const discount = isDiscountActive(product);
 
@@ -32,7 +34,12 @@ export default function ProductPurchase({ product }: { product: ProductDTO }) {
   const filled = Math.round(product.rating);
 
   return (
-    <section id="shop" className="bg-apos-surface py-16 md:py-24">
+    <section
+      id="shop"
+      dir={isAr ? "rtl" : "ltr"}
+      style={isAr ? { fontFamily: '"Cairo", system-ui, sans-serif' } : undefined}
+      className="bg-apos-surface py-16 md:py-24"
+    >
       <div className="container-editorial grid items-start gap-10 md:grid-cols-2 md:gap-16">
         <div className="relative aspect-square w-full overflow-hidden rounded-xl bg-apos-surfaceContainer apo-shadow">
           <Image
@@ -46,7 +53,9 @@ export default function ProductPurchase({ product }: { product: ProductDTO }) {
         </div>
 
         <div>
-          <p className="apo-eyebrow">The Signature Oil</p>
+          <p className="apo-eyebrow" style={isAr ? { fontFamily: '"Cairo", system-ui, sans-serif' } : undefined}>
+            {t("product.signature")}
+          </p>
           <h1 className="mt-4 font-noto text-4xl font-semibold leading-tight text-apos-onSurface md:text-5xl">
             {product.name}
           </h1>
@@ -57,8 +66,8 @@ export default function ProductPurchase({ product }: { product: ProductDTO }) {
                 <Star key={i} filled={i < filled} />
               ))}
             </div>
-            <span className="text-[13px] text-apos-onSurfaceVariant">
-              {product.reviewCount} reviews
+            <span className="text-[13px] text-apos-onSurfaceVariant" style={isAr ? { fontFamily: '"Cairo", system-ui, sans-serif' } : undefined}>
+              {product.reviewCount} {t("product.reviews")}
             </span>
           </div>
 
@@ -95,39 +104,45 @@ export default function ProductPurchase({ product }: { product: ProductDTO }) {
           ) : null}
 
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-            <button onClick={handleAdd} className="apo-btn-ghost" disabled={!product.inStock}>
-              Add to Cart
+            <button
+              onClick={handleAdd}
+              className="apo-btn-ghost"
+              disabled={!product.inStock}
+              style={isAr ? { fontFamily: '"Cairo", system-ui, sans-serif' } : undefined}
+            >
+              {t("product.addToCart")}
             </button>
             <button
               onClick={handleBuy}
               className="apo-btn"
               disabled={!product.inStock}
+              style={isAr ? { fontFamily: '"Cairo", system-ui, sans-serif' } : undefined}
             >
-              Buy Now
+              {t("product.buyNow")}
             </button>
           </div>
 
-          <p className="mt-3 text-[13px] text-apos-onSurfaceVariant">
-            {product.inStock ? "In stock, ready to ship" : "Currently unavailable"}
+          <p className="mt-3 text-[13px] text-apos-onSurfaceVariant" style={isAr ? { fontFamily: '"Cairo", system-ui, sans-serif' } : undefined}>
+            {product.inStock ? t("product.inStock") : t("product.outOfStock")}
           </p>
 
           <div className="mt-8 flex flex-col gap-3 border-t border-apos-outlineVariant pt-6">
             <div className="flex items-center gap-3">
               <TrustIcon name="leaf" className="text-apos-primary" />
-              <span className="text-[14px] text-apos-onSurfaceVariant">
-                100% botanical, cold-pressed
+              <span className="text-[14px] text-apos-onSurfaceVariant" style={isAr ? { fontFamily: '"Cairo", system-ui, sans-serif' } : undefined}>
+                {t("product.botanical")}
               </span>
             </div>
             <div className="flex items-center gap-3">
               <TrustIcon name="truck" className="text-apos-primary" />
-              <span className="text-[14px] text-apos-onSurfaceVariant">
-                Free shipping over 500 EGP
+              <span className="text-[14px] text-apos-onSurfaceVariant" style={isAr ? { fontFamily: '"Cairo", system-ui, sans-serif' } : undefined}>
+                {t("product.freeShipping")}
               </span>
             </div>
             <div className="flex items-center gap-3">
               <TrustIcon name="shield" className="text-apos-primary" />
-              <span className="text-[14px] text-apos-onSurfaceVariant">
-                Cash on Delivery available
+              <span className="text-[14px] text-apos-onSurfaceVariant" style={isAr ? { fontFamily: '"Cairo", system-ui, sans-serif' } : undefined}>
+                {t("product.cod")}
               </span>
             </div>
           </div>

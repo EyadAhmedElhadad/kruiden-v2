@@ -4,9 +4,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { useCart } from "@/lib/cart-context";
 import { formatPrice } from "@/lib/utils";
+import { useLanguage } from "@/components/LanguageProvider";
 
 export default function CartDrawer() {
   const { lines, isOpen, closeCart, updateQuantity, removeItem, subtotal } = useCart();
+  const { t, isAr } = useLanguage();
 
   return (
     <>
@@ -24,8 +26,10 @@ export default function CartDrawer() {
         role="dialog"
         aria-label="Shopping cart"
       >
-        <div className="flex items-center justify-between border-b border-ink/8 px-6 py-5">
-          <h2 className="font-serif text-xl font-semibold">Your Cart</h2>
+        <div className="flex items-center justify-between border-b border-ink/8 px-6 py-5" dir={isAr ? "rtl" : "ltr"}>
+          <h2 className="font-serif text-xl font-semibold" style={isAr ? { fontFamily: '"Cairo", serif' } : undefined}>
+            {t("cart.title")}
+          </h2>
           <button
             onClick={closeCart}
             aria-label="Close cart"
@@ -36,10 +40,12 @@ export default function CartDrawer() {
         </div>
 
         {lines.length === 0 ? (
-          <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center">
-            <p className="text-sm text-ink/50">Your cart is empty.</p>
-            <Link href="/product" onClick={closeCart} className="btn-primary">
-              Shop the Oil
+          <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center" dir={isAr ? "rtl" : "ltr"}>
+            <p className="text-sm text-ink/50" style={isAr ? { fontFamily: '"Cairo", system-ui, sans-serif' } : undefined}>
+              {t("cart.empty")}
+            </p>
+            <Link href="/product" onClick={closeCart} className="btn-primary" style={isAr ? { fontFamily: '"Cairo", system-ui, sans-serif' } : undefined}>
+              {t("cart.shopOil")}
             </Link>
           </div>
         ) : (
@@ -58,8 +64,9 @@ export default function CartDrawer() {
                           onClick={() => removeItem(line.productId)}
                           aria-label={`Remove ${line.name}`}
                           className="-mr-1 px-1 py-2 text-xs text-ink/40 hover:text-ink"
+                          style={isAr ? { fontFamily: '"Cairo", system-ui, sans-serif' } : undefined}
                         >
-                          Remove
+                          {isAr ? "إزالة" : "Remove"}
                         </button>
                       </div>
                       <div className="flex items-center justify-between">
@@ -90,22 +97,28 @@ export default function CartDrawer() {
               </ul>
             </div>
 
-            <div className="border-t border-ink/8 px-6 py-6">
+            <div className="border-t border-ink/8 px-6 py-6" dir={isAr ? "rtl" : "ltr"}>
               <div className="mb-4 flex items-center justify-between text-sm">
-                <span className="text-ink/60">Subtotal</span>
+                <span className="text-ink/60">{t("cart.subtotal")}</span>
                 <span className="font-serif text-lg font-semibold">
                   {formatPrice(subtotal)}
                 </span>
               </div>
-              <Link href="/checkout" onClick={closeCart} className="btn-primary w-full">
-                Checkout
+              <Link
+                href="/checkout"
+                onClick={closeCart}
+                className="btn-primary w-full"
+                style={isAr ? { fontFamily: '"Cairo", system-ui, sans-serif' } : undefined}
+              >
+                {t("cart.checkout")}
               </Link>
               <Link
                 href="/cart"
                 onClick={closeCart}
                 className="mt-3 block text-center text-xs font-medium uppercase tracking-wide text-ink/50 hover:text-ink"
+                style={isAr ? { fontFamily: '"Cairo", system-ui, sans-serif' } : undefined}
               >
-                View full cart
+                {isAr ? "عرض السلة كاملة" : "View full cart"}
               </Link>
             </div>
           </>
