@@ -160,7 +160,7 @@ model HeroSection {
   headline1          String   @default("Naturally better")
   headline2          String   @default("hair days.")
   description        String   @db.Text @default("A cold-pressed hair oil made from a short, transparent list of botanicals — crafted to nourish the scalp and strengthen every strand.")
-  primaryCtaLabel    String   @default("Shop the Oil")
+  primaryCtaLabel    String   @default("Purchase the Oil")
   primaryCtaHref     String   @default("/product")
   secondaryCtaLabel  String   @default("Discover the Ritual")
   secondaryCtaHref   String   @default("#ritual")

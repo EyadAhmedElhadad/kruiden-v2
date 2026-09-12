@@ -30,7 +30,7 @@ export const FALLBACK_HERO = {
   headline1: "Naturally better",
   headline2: "hair days.",
   description: "A cold-pressed hair oil made from a short, transparent list of botanicals — crafted to nourish the scalp and strengthen every strand.",
-  primaryCtaLabel: "Shop the Oil",
+  primaryCtaLabel: "Purchase the Oil",
   primaryCtaHref: "/product",
   secondaryCtaLabel: "Discover the Ritual",
   secondaryCtaHref: "#ritual",
