@@ -41,6 +41,10 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0"
           rel="stylesheet"
         />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600&family=Noto+Sans+Arabic:wght@400;500;600&display=swap"
+          rel="stylesheet"
+        />
         <style>{`
           :root {
             --font-display: "Playfair Display", Georgia, serif;
